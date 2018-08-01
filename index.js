@@ -1,50 +1,17 @@
 "use strict";
 const path = require('path');
-const nodemailer = require("nodemailer");
-const EmailTemplate = require('email-templates').EmailTemplate;
+const Email = require('email-templates');
+
 
 let SimpleParseSmtpAdapter = (adapterOptions) => {
-
-    if(!adapterOptions && adapterOptions.service=='Gmail'){
-        if (!adapterOptions ||  
-            !adapterOptions.service|| 
-            !adapterOptions.type ||  
-            !adapterOptions.user || 
-            !adapterOptions.clientId || 
-            !adapterOptions.clientSecret|| 
-            !adapterOptions.refreshToken || 
-            !adapterOptions.accessToken ) {
-            throw 'SimpleParseSMTPAdapter requires service,type, user, clientId,clientSecret,refreshToken and accessToken';
-        }
-    }
-    else if(!adapterOptions && adapterOptions.service=='SMTP'){
-            if (!adapterOptions || !adapterOptions.user || !adapterOptions.password || !adapterOptions.host || !adapterOptions.fromAddress ) {
-                throw 'SimpleParseSMTPAdapter requires user, password, host, and fromAddress';
-            }
-    }else{
-            throw 'SimpleParseSMTPAdapter please choose service Gmail or SMTP';
+    if (!adapterOptions || !adapterOptions.user || !adapterOptions.password || !adapterOptions.host || !adapterOptions.fromAddress ) {
+        throw 'SimpleParseSMTPAdapter requires user, password, host, and fromAddress';
     }
 
     /**
-     * Creates trasporter for send emails with OAuth2 Gmail
+     * Creates trasporter for send emails with OAuth2 SMTP
      */
-    let transporterOAuth2Gmail = nodemailer.createTransport({
-        service: adapterOptions.service,
-        auth: {
-            type: adapterOptions.type,
-            user: adapterOptions.user,
-            clientId: adapterOptions.clientId,
-            clientSecret: adapterOptions.clientSecret,
-            refreshToken: adapterOptions.refreshToken,
-            accessToken: adapterOptions.refreshToken,
-            expires: adapterOptions.expires
-        }
-    });
-
-    /**
-     * Creates trasporter for send emails with OAuth2 Gmail
-     */
-     let transporter = nodemailer.createTransport({
+     let transportConfig = {
         host: adapterOptions.host,
         port: adapterOptions.port,
         secure: adapterOptions.isSSL,
@@ -55,6 +22,36 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
         },
         tls: {
             rejectUnauthorized: adapterOptions.isTlsRejectUnauthorized !== undefined ? adapterOptions.isTlsRejectUnauthorized : true
+        }
+    };
+
+    /*
+        setting up mail
+    */
+    const email = new Email({
+        message: {
+            from: adapterOptions.fromAddress
+        },
+        transport: transportConfig,
+        juice: adapterOptions.templates.cssFolder? true : false,
+        juiceResources: {
+            preserveImportant: true,
+            webResources: {
+            //
+            // this is the relative directory to your CSS/image assets
+            // and its default path is `build/`:
+            //
+            // e.g. if you have the following in the `<head`> of your template:
+            // `<link rel="stylesheet" href="style.css" data-inline="data-inline">`
+            // then this assumes that the file `build/style.css` exists
+            //
+            relativeTo: adapterOptions.templates.cssFolder? path.join(adapterOptions.templates.cssFolder): path.resolve('build')
+            //
+            // but you might want to change it to something like:
+            // relativeTo: path.join(__dirname, '..', 'assets')
+            // (so that you can re-use CSS/images that are used in your web-app)
+            //
+            }
         }
     });
 
@@ -76,64 +73,23 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
     };
 
     /**
-     * Return an email template with data rendered using email-templates module
-     * check module docs: https://github.com/niftylettuce/node-email-templates
-     *
-     * @param String template path template
-     * @param Object data object with data for use in template
-     */
-    let renderTemplate = (template, data) => {
-        let templateDir = template;
-        let html = new EmailTemplate(templateDir);
-
-        return new Promise((resolve, reject) => {
-            html.render(data, (err, result) => {
-                if (err) {
-                    console.log(err)
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-    };
-
-    /**
      * Parse use this function by default for sends emails
      * @param mail This object contain to address, subject and email text in plain text
      * @returns {Promise}
      */
     let sendMail = (mail) => {
-        let mailOptions = {
-            to: mail.to,
-            html: mail.text,
-            subject: mail.subject,
-            from: adapterOptions.fromAddress
-        };
-
-        return new Promise((resolve, reject) => {
-
-            if(adapterOptions.service=='SMTP'){
-                transporter.sendMail(mailOptions, (error, info) => {
-                    if(error) {
-                        console.log(error)
-                        reject(error);
-                    } else {
-                        resolve(info);
-                    }
-                });
-            }
-            else if(adapterOptions.service=='Gmail'){
-                transporterOAuth2Gmail.sendMail(mailOptions, (error, info) => {
-                    if(error) {
-                        console.log(error)
-                        reject(error);
-                    } else {
-                        resolve(info);
-                    }
-                });
-            }
-
+        const {
+            template,
+            to,
+            data
+        } = mail;
+        return email.send({
+            template: template,
+            message: {
+                to: to,
+                from: adapterOptions.fromAddress
+            },
+            locals: data
         });
     };
 
@@ -143,30 +99,17 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
      * @returns {Promise}
      */
     let sendPasswordResetEmail = (data) => {
-        let mail = {
-            subject: 'Reset Password',
-            to: getUserEmail(data.user)
-        };
-
+        const userMail = getUserEmail(data.user);
         if (adapterOptions.templates && adapterOptions.templates.resetPassword) {
-
-            return renderTemplate(adapterOptions.templates.resetPassword.template, data).then((result) => {
-                mail.text = result.html;
-                mail.subject = adapterOptions.templates.resetPassword.subject;
-
-                return sendMail(mail);
-            }, (e) => {
-
-                return new Promise((resolve, reject) => {
-                    console.log(e)
-                    reject(e);
-                });
+            sendMail({
+                template: adapterOptions.templates.resetPassword.template,
+                to: userMail,
+                data
+            }).then(() => {
+                console.log('reset password to', userMail);
             });
-
         } else {
-            mail.text = data.link;
-
-            return sendMail(mail);
+            throw 'Please input yout template for resetPassword mail'
         }
     };
 
@@ -176,36 +119,22 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
      * @returns {Promise}
      */
     let sendVerificationEmail = (data) => {
-        let mail = {
-            subject: 'Verify Email',
-            to: getUserEmail(data.user)
-        };
-
-        if (adapterOptions.templates && adapterOptions.templates.verifyEmail) {
-
-            return renderTemplate(adapterOptions.templates.verifyEmail.template, data).then((result) => {
-                mail.text = result.html;
-                mail.subject = adapterOptions.templates.verifyEmail.subject;
-
-                return sendMail(mail);
-            }, (e) => {
-
-                return new Promise((resolve, reject) => {
-                    console.log(e);
-                    reject(e);
-                });
+        const userMail = getUserEmail(data.user);
+        if (adapterOptions.templates && adapterOptions.templates.resetPassword) {
+            sendMail({
+                template: adapterOptions.templates.verifyEmail.template,
+                to: userMail,
+                data
+            }).then(() => {
+                console.log('sent verify email to', userMail);
             });
-
         } else {
-            mail.text = data.link;
-
-            return sendMail(mail);
+            throw 'Please input yout template for verifyPassword mail'
         }
     };
 
     return Object.freeze({
         sendMail: sendMail,
-        renderTemplate: renderTemplate,
         sendPasswordResetEmail: sendPasswordResetEmail,
         sendVerificationEmail: sendVerificationEmail
     });
