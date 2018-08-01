@@ -54,18 +54,12 @@ let api = new ParseServer({
 			//You can specify here
 			emailField: 'username', 
 			templates: {
-				//put link(rel="stylesheet", href="/app.css", data-inline) in the <head> of your html
-				cssFolder: __dirname + '/views/email/css', // automatic load of css in this folder
-			    //This template is used only for reset password email
+				templateRoot: __dirname + '/views/email/template/',
 				resetPassword: {
-				    //Path to your template
-					template: __dirname + '/views/email/reset-password',
-					//Subject for this email
-					subject: 'Reset your password'
+					template: 'reset-password',
 				},
 				verifyEmail: {
-				    template: __dirname + '/views/email/verify-email',
-				    subject: 'Verify Email'
+					template: 'verify-email',
 				}
 			}
 		}
@@ -89,6 +83,46 @@ The path you pass to the email adapter must be a directory and not a file, this 
 - link //This is the link for reset the password
 - user //This is a Parse object with the current user, so you can use any field in your User class of parse for example the user name `#{user.get('username')}`
 
-you can set cssFolder in templates and use `link(rel="stylesheet", href="/app.css", data-inline)` in the <head> of your html and use your css with it
+in templates use `link(rel="stylesheet", href="/css/style.css", data-inline)` in the <head> of your html and it uses your css from rootTemplateFolder/css/app.css
+
+### Example
+
+#### html.pug
+```pug
+doctype html
+html
+  head
+    block head
+      meta(charset="utf-8")
+      meta(name="viewport", content="width=device-width")
+      meta(http-equiv="X-UA-Compatible", content="IE=edge")
+      meta(name="x-apple-disable-message-reformatting")
+      title= subject
+      link(rel="stylesheet", href="css/reset.css", data-inline)
+  body
+    p your reset password link is: #{link},
+```
+
+#### subject.pug
+```pug
+=`${appName}: Reset password`
+```
+
+Folder structure
+
+```sh
+.
+├── app.js
+└── templateRoot
+    └── reset-password
+        ├── html.pug
+        └── subject.pug
+	└── verify-email
+        ├── html.pug
+        └── subject.pug
+	└── css
+		├── reset.css
+        └── verify.css
+```
 
 ### License MIT

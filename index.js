@@ -25,36 +25,6 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
         }
     };
 
-    /*
-        setting up mail
-    */
-    const email = new Email({
-        message: {
-            from: adapterOptions.fromAddress
-        },
-        transport: transportConfig,
-        juice: adapterOptions.templates.cssFolder? true : false,
-        juiceResources: {
-            preserveImportant: true,
-            webResources: {
-            //
-            // this is the relative directory to your CSS/image assets
-            // and its default path is `build/`:
-            //
-            // e.g. if you have the following in the `<head`> of your template:
-            // `<link rel="stylesheet" href="style.css" data-inline="data-inline">`
-            // then this assumes that the file `build/style.css` exists
-            //
-            relativeTo: adapterOptions.templates.cssFolder? path.join(adapterOptions.templates.cssFolder): path.resolve('build')
-            //
-            // but you might want to change it to something like:
-            // relativeTo: path.join(__dirname, '..', 'assets')
-            // (so that you can re-use CSS/images that are used in your web-app)
-            //
-            }
-        }
-    });
-
     /**
      * When emailField is defined in adapterOptines return that field
      * if not return the field email and if is undefined returns username
@@ -72,6 +42,22 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
         return email;
     };
 
+    // setting up mail
+    const email = new Email({
+        views: { root: adapterOptions.templates.templateRoot },
+        message: {
+            from: adapterOptions.fromAddress
+        },
+        transport: transportConfig,
+        juice: true,
+        juiceResources: {
+            preserveImportant: true,
+            webResources: {
+            relativeTo: adapterOptions.templates.templateRoot
+            }
+        }
+    });
+
     /**
      * Parse use this function by default for sends emails
      * @param mail This object contain to address, subject and email text in plain text
@@ -84,10 +70,9 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
             data
         } = mail;
         return email.send({
-            template: template,
+            template,
             message: {
-                to: to,
-                from: adapterOptions.fromAddress
+                to
             },
             locals: data
         });
@@ -105,9 +90,10 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
                 template: adapterOptions.templates.resetPassword.template,
                 to: userMail,
                 data
-            }).then(() => {
-                console.log('reset password to', userMail);
-            });
+            })
+            // .then(() => {
+            //     console.log('reset password to', userMail);
+            // });
         } else {
             throw 'Please input yout template for resetPassword mail'
         }
