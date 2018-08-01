@@ -1,5 +1,5 @@
 # Parse Server SMTP Email Adapter
-###This fork uses upgraded dependencies with some security issues fixed
+### This fork uses upgraded dependencies with some security fixes
 
 With this adapter you can send email for reset password and email verification in parse with SMTP access and custom templates.
 
@@ -108,7 +108,7 @@ html
 =`${appName}: Reset password`
 ```
 
-Folder structure
+#### Folder structure
 
 ```sh
 .
