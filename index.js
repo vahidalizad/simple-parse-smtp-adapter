@@ -90,10 +90,9 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
                 template: adapterOptions.templates.resetPassword.template,
                 to: userMail,
                 data
-            })
-            // .then(() => {
-            //     console.log('reset password to', userMail);
-            // });
+            }).then(() => {
+                console.log('sent reset password to', userMail);
+            });
         } else {
             throw 'Please input yout template for resetPassword mail'
         }
@@ -106,7 +105,7 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
      */
     let sendVerificationEmail = (data) => {
         const userMail = getUserEmail(data.user);
-        if (adapterOptions.templates && adapterOptions.templates.resetPassword) {
+        if (adapterOptions.templates && adapterOptions.templates.verifyEmail) {
             sendMail({
                 template: adapterOptions.templates.verifyEmail.template,
                 to: userMail,
@@ -115,14 +114,14 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
                 console.log('sent verify email to', userMail);
             });
         } else {
-            throw 'Please input yout template for verifyPassword mail'
+            throw 'Please input yout template for verifyEmail mail'
         }
     };
 
     return Object.freeze({
-        sendMail: sendMail,
-        sendPasswordResetEmail: sendPasswordResetEmail,
-        sendVerificationEmail: sendVerificationEmail
+        sendMail,
+        sendPasswordResetEmail,
+        sendVerificationEmail
     });
 };
 
