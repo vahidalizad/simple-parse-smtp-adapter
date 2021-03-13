@@ -1,21 +1,19 @@
 "use strict";
-const path = require('path');
 const Email = require('email-templates');
 
 
 let SimpleParseSmtpAdapter = (adapterOptions) => {
-    if (!adapterOptions || !adapterOptions.user || !adapterOptions.password || !adapterOptions.host || !adapterOptions.fromAddress ) {
+    if (!adapterOptions || !adapterOptions.user || !adapterOptions.password || !adapterOptions.host || !adapterOptions.fromAddress) {
         throw 'SimpleParseSMTPAdapter requires user, password, host, and fromAddress';
     }
 
     /**
      * Creates trasporter for send emails with OAuth2 SMTP
      */
-     let transportConfig = {
+    let transportConfig = {
         host: adapterOptions.host,
         port: adapterOptions.port,
         secure: adapterOptions.isSSL,
-        name: adapterOptions.name || '127.0.0.1',
         auth: {
             user: adapterOptions.user,
             pass: adapterOptions.password
@@ -50,10 +48,12 @@ let SimpleParseSmtpAdapter = (adapterOptions) => {
         },
         transport: transportConfig,
         juice: true,
+        send: true,
+        preview: false,
         juiceResources: {
             preserveImportant: true,
             webResources: {
-            relativeTo: adapterOptions.templates.templateRoot
+                relativeTo: adapterOptions.templates.templateRoot
             }
         }
     });

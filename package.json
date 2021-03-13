@@ -1,27 +1,29 @@
 {
-    "name": "parse-smtp-adapter",
-    "version": "1.0.3",
-    "description": "Send custom emails from parse with SMTP access",
-    "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "node index.js"
-    },
-    "keywords": [
-        "parse",
-        "email",
-        "adapter",
-        "templates",
-        "parse.com",
-        "pug"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/vahidalizad/simple-parse-smtp-adapter"
-    },
-    "author": "vahid alizad",
-    "license": "MIT",
-    "dependencies": {
-        "email-templates": "^4.0.3"
-    }
+  "name": "parse-smtp-adapter",
+  "version": "2.0.3",
+  "description": "Send custom emails from parse with SMTP access",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "parse",
+    "email",
+    "adapter",
+    "templates",
+    "parse.com",
+    "pug"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vahidalizad/simple-parse-smtp-adapter"
+  },
+  "author": "vahid alizad",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "email-templates": "^4.0.3",
+    "pug": "^3.0.2"
+  }
 }

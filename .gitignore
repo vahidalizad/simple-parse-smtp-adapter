@@ -11,3 +11,5 @@ config.gypi
 CVS
 npm-debug.log
 .vscode
+.env
+reset
